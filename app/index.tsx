@@ -1,27 +1,49 @@
 import { THEME_COLORS } from "@/theme/colors";
+import { useState } from "react";
 import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableHighlight,
   TouchableOpacity,
+  // TouchableWithoutFeedback,
   View,
 } from "react-native";
 
+type Category = "work" | "travel";
+
 export default function App() {
-  // const [selectedId,]
+  const [selectedCategory, setSelectedCategory] = useState<Category>("work");
   return (
     <View style={styles.container}>
       <StatusBar barStyle='default' />
       <View style={styles.header}>
-        <TouchableOpacity activeOpacity={0.5}>
-          <Text style={styles.btnText}>Work</Text>
+        {/* onPress 가 준비되어 있는 컴포넌트 */}
+        <TouchableOpacity
+          activeOpacity={0.5}
+          onPress={() => setSelectedCategory("work")}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color:
+                selectedCategory === "work"
+                  ? THEME_COLORS.white
+                  : THEME_COLORS.gray,
+            }}>
+            Work
+          </Text>
         </TouchableOpacity>
-        <TouchableHighlight onPress={() => console.log("Travel")}>
-          {/* <TouchableOpacity> */}
-          <Text style={styles.btnText}>Travel</Text>
-          {/* </TouchableOpacity> */}
-        </TouchableHighlight>
+        <TouchableOpacity onPress={() => setSelectedCategory("travel")}>
+          <Text
+            style={{
+              ...styles.btnText,
+              color:
+                selectedCategory === "travel"
+                  ? THEME_COLORS.white
+                  : THEME_COLORS.gray,
+            }}>
+            Travel
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -30,11 +52,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME_COLORS.background,
+    backgroundColor: THEME_COLORS.bg,
     paddingHorizontal: 20,
   },
   header: {
-    backgroundColor: THEME_COLORS.background,
+    backgroundColor: THEME_COLORS.bg,
     marginTop: 100,
     justifyContent: "space-between",
     flexDirection: "row",
