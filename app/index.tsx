@@ -1,7 +1,9 @@
 import { THEME_COLORS } from '@/theme/colors';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import {
+	Alert,
 	Pressable,
 	ScrollView,
 	StatusBar,
@@ -27,6 +29,7 @@ export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
 	const [input, setInput] = useState<string>('');
 	const [items, setItems] = useState<{ [key: string]: Item }>({});
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const saveToDos = async (newItems: { [key: string]: Item }) => {
 		try {
@@ -59,6 +62,27 @@ export default function App() {
 			await saveToDos(latestItems);
 			setInput('');
 		}
+	};
+
+	const deleteItem = async (key: string) => {
+		Alert.alert('Delete', 'Are you sure you want to delete this item?', [
+			{
+				text: 'Cancel',
+				style: 'cancel',
+			},
+			{
+				text: 'Delete',
+				onPress: async () => {
+					const newToDos = { ...items };
+					delete newToDos[key]; // key 와 매칭되는 object key 삭제
+
+					setItems(newToDos); // 삭제할 item 이 제거된 최종 items 을 업데이트
+					await saveToDos(newToDos); // 최종 items 을 localStorage 에 저장
+				},
+				style: 'destructive',
+			},
+		]);
+		return;
 	};
 
 	const checkItem = async (key: string) => {
@@ -148,6 +172,13 @@ export default function App() {
 							>
 								{item.text}
 							</Text>
+							<Pressable hitSlop={30} onPress={() => deleteItem(key)}>
+								<FontAwesome
+									name='trash-o'
+									size={24}
+									color={THEME_COLORS.deleteIconColor}
+								/>
+							</Pressable>
 						</Pressable>
 					) : null,
 				)}
@@ -161,6 +192,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: THEME_COLORS.bg,
 		paddingHorizontal: 20,
+		paddingBottom: 40,
 	},
 	header: {
 		backgroundColor: THEME_COLORS.bg,
@@ -190,13 +222,12 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 	},
 	itemContainer: {
-		flex: 1,
-		borderWidth: 1,
-		borderStyle: 'dashed',
-		borderColor: '#ffffff92',
 		marginTop: 20,
 	},
 	item: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
 		paddingVertical: 10,
 		paddingHorizontal: 20,
 		borderRadius: 10,
