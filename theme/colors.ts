@@ -6,4 +6,5 @@ export const THEME_COLORS = {
 	primary: '#2d92ff',
 	secondary: '#6c6c6c',
 	secondaryText: '#a8a8a8',
+	deleteIconColor: '#ff3b30',
 };
