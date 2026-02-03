@@ -1,5 +1,6 @@
 import { THEME_COLORS } from '@/theme/colors';
-import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 import {
 	Pressable,
 	ScrollView,
@@ -12,9 +13,12 @@ import {
 	View,
 } from 'react-native';
 
+const STORAGE_KEY = 'toDos';
+
 type Category = 'work' | 'travel';
 
 interface Item {
+	type: Category;
 	text: string;
 	checked: boolean;
 }
@@ -23,22 +27,52 @@ export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
 	const [input, setInput] = useState<string>('');
 	const [items, setItems] = useState<{ [key: string]: Item }>({});
-	const addItem = () => {
+
+	const saveToDos = async (newItems: { [key: string]: Item }) => {
+		try {
+			const dataString = JSON.stringify(newItems); // object -> string
+
+			await AsyncStorage.setItem(STORAGE_KEY, dataString);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const loadToDos = async () => {
+		try {
+			const storedDataString = await AsyncStorage.getItem(STORAGE_KEY);
+			const storedItems = JSON.parse(storedDataString || '{}'); // string -> object
+
+			setItems(storedItems);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const addItem = async () => {
 		if (input.trim() !== '') {
-			const newItem = Object.assign({}, items, {
-				[Date.now()]: { text: input, checked: false },
+			const latestItems = Object.assign({}, items, {
+				[Date.now()]: { type: selectedCategory, text: input, checked: false },
 			});
-			setItems(newItem);
+			setItems(latestItems);
+
+			await saveToDos(latestItems);
 			setInput('');
 		}
 	};
 
-	const checkItem = (key: string) => {
-		const newItems = Object.assign({}, items, {
+	const checkItem = async (key: string) => {
+		const latestItems = Object.assign({}, items, {
 			[key]: { ...items[key], checked: !items[key].checked },
 		});
-		setItems(newItems);
+		setItems(latestItems);
+
+		await saveToDos(latestItems);
 	};
+
+	useEffect(() => {
+		loadToDos();
+	}, []);
 
 	return (
 		<View style={styles.container}>
@@ -91,30 +125,32 @@ export default function App() {
 				/>
 			</View>
 			<ScrollView style={styles.itemContainer}>
-				{Object.entries(items).map(([key, item]) => (
-					<Pressable
-						key={key}
-						style={{
-							...styles.item,
-							backgroundColor: item.checked
-								? THEME_COLORS.gray
-								: THEME_COLORS.primary,
-						}}
-						onPress={() => checkItem(key)}
-					>
-						<Text
+				{Object.entries(items).map(([key, item]) =>
+					item.type === selectedCategory ? (
+						<Pressable
+							key={key}
 							style={{
-								...styles.itemText,
-								textDecorationLine: item.checked ? 'line-through' : 'none',
-								color: item.checked
-									? THEME_COLORS.secondaryText
-									: THEME_COLORS.white,
+								...styles.item,
+								backgroundColor: item.checked
+									? THEME_COLORS.gray
+									: THEME_COLORS.primary,
 							}}
+							onPress={() => checkItem(key)}
 						>
-							{item.text}
-						</Text>
-					</Pressable>
-				))}
+							<Text
+								style={{
+									...styles.itemText,
+									textDecorationLine: item.checked ? 'line-through' : 'none',
+									color: item.checked
+										? THEME_COLORS.secondaryText
+										: THEME_COLORS.white,
+								}}
+							>
+								{item.text}
+							</Text>
+						</Pressable>
+					) : null,
+				)}
 			</ScrollView>
 		</View>
 	);
