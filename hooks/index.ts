@@ -1,0 +1,1 @@
+export { useInitTab } from './useInitTab';
