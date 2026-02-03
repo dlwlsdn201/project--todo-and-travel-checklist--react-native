@@ -1,3 +1,4 @@
+import { useInitTab } from '@/hooks';
 import { THEME_COLORS } from '@/theme/colors';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,7 +18,7 @@ import {
 
 const STORAGE_KEY = 'toDos';
 
-type Category = 'work' | 'travel';
+export type Category = 'work' | 'travel';
 
 interface Item {
 	type: Category;
@@ -29,7 +30,6 @@ export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
 	const [input, setInput] = useState<string>('');
 	const [items, setItems] = useState<{ [key: string]: Item }>({});
-	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const saveToDos = async (newItems: { [key: string]: Item }) => {
 		try {
@@ -94,19 +94,35 @@ export default function App() {
 		await saveToDos(latestItems);
 	};
 
+	const initTabData = useInitTab();
 	useEffect(() => {
 		loadToDos();
-	}, []);
+
+		if (typeof initTabData === 'string')
+			setSelectedCategory(initTabData as Category);
+	}, [initTabData]);
+
+	// 가장 마지막의 탭 상태를 localStorage 에 저장
+	const saveTabData = async (category: Category) => {
+		try {
+			await AsyncStorage.setItem('selectedCategory', category);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	// 탭 변경 시 탭 상태를 localStorage 에 저장
+	const changeTab = async (category: Category) => {
+		setSelectedCategory(category);
+		await saveTabData(category);
+	};
 
 	return (
 		<View style={styles.container}>
 			<StatusBar barStyle='default' />
 			<View style={styles.header}>
 				{/* onPress 가 준비되어 있는 컴포넌트 */}
-				<TouchableOpacity
-					activeOpacity={0.5}
-					onPress={() => setSelectedCategory('work')}
-				>
+				<TouchableOpacity activeOpacity={0.5} onPress={() => changeTab('work')}>
 					<Text
 						style={{
 							...styles.btnText,
@@ -119,7 +135,7 @@ export default function App() {
 						Work
 					</Text>
 				</TouchableOpacity>
-				<TouchableOpacity onPress={() => setSelectedCategory('travel')}>
+				<TouchableOpacity onPress={() => changeTab('travel')}>
 					<Text
 						style={{
 							...styles.btnText,
