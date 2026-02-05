@@ -3,11 +3,11 @@ name: Auto Merge To main
 on:
   push:
     branches:
-      - 'feature/*'
-      - 'refactor/*'
-      - 'improve/*'
-      - 'bugfix/*'
-      - 'hotfix/*'
+      - "*-feature-*"
+      - "*-refactor-*"
+      - "*-improve-*"
+      - "*-bugfix"
+      - "*-hotfix"
 
 jobs:
   build-test:
