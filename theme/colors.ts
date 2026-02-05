@@ -9,6 +9,6 @@ export const THEME_COLORS = {
 	deleteIconColor: '#ff3b30',
 
 	// Icon colors
-	iconDefault: '#b7b7b7',
-	iconPressed: '#6c6c6c',
+	iconDefault: '#ebebeb',
+	iconPressed: '#474747',
 };
