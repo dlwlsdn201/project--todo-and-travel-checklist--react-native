@@ -3,11 +3,11 @@ name: Auto Merge To main
 on:
   push:
     branches:
-      - 'feature/*'
-      - 'refactor/*'
-      - 'improve/*'
-      - 'bugfix/*'
-      - 'hotfix/*'
+      - "*-feature-*"
+      - "*-refactor-*"
+      - "*-improve-*"
+      - "*-bugfix"
+      - "*-hotfix"
 
 jobs:
   build-test:
@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install # pnpm으로 의존성 설치
 
-      - name: Build project
-        run: pnpm run build # pnpm으로 빌드 실행
+      # - name: Build project
+      #   run: pnpm run build # pnpm으로 빌드 실행 (*빌드는 추후 빌드 환경 구축 후 진행)
 
   merge-to-main:
     needs: build-test

@@ -7,4 +7,8 @@ export const THEME_COLORS = {
 	secondary: '#6c6c6c',
 	secondaryText: '#a8a8a8',
 	deleteIconColor: '#ff3b30',
+
+	// Icon colors
+	iconDefault: '#b7b7b7',
+	iconPressed: '#6c6c6c',
 };

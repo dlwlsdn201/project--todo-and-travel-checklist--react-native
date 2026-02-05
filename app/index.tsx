@@ -1,3 +1,4 @@
+import { EditButton } from '@/component/EditButton';
 import { useInitTab } from '@/hooks';
 import { THEME_COLORS } from '@/theme/colors';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -188,13 +189,20 @@ export default function App() {
 							>
 								{item.text}
 							</Text>
-							<Pressable hitSlop={30} onPress={() => deleteItem(key)}>
-								<FontAwesome
-									name='trash-o'
-									size={24}
-									color={THEME_COLORS.deleteIconColor}
+							<View style={styles.actionButtonContainer}>
+								<EditButton
+									onPress={() => {
+										console.log('편집모드로 진입');
+									}}
 								/>
-							</Pressable>
+								<Pressable hitSlop={30} onPress={() => deleteItem(key)}>
+									<FontAwesome
+										name='trash-o'
+										size={24}
+										color={THEME_COLORS.deleteIconColor}
+									/>
+								</Pressable>
+							</View>
 						</Pressable>
 					) : null,
 				)}
@@ -231,6 +239,11 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		borderRadius: 20,
 		fontSize: 18,
+	},
+
+	actionButtonContainer: {
+		flexDirection: 'row',
+		gap: 14,
 	},
 	btnText: {
 		color: THEME_COLORS.gray,
