@@ -15,7 +15,6 @@ export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
 	const [input, setInput] = useState<string>('');
 	const [items, setItems] = useState<{ [key: string]: TodoPoint }>({});
-	const [editMode, setEditMode] = useState<boolean>(false);
 
 	// 할 일 목록 로드
 	const loadToDos = async () => {
@@ -73,14 +72,6 @@ export default function App() {
 		await saveToLocalStorage(latestItems);
 	};
 
-	const initTabData = useInitTab();
-	useEffect(() => {
-		loadToDos();
-
-		if (typeof initTabData === 'string')
-			setSelectedCategory(initTabData as Category);
-	}, [initTabData]);
-
 	// 가장 마지막의 탭 상태를 localStorage 에 저장
 	const saveTabData = async (category: Category) => {
 		try {
@@ -95,6 +86,40 @@ export default function App() {
 		setSelectedCategory(category);
 		await saveTabData(category);
 	};
+
+	// 입력 데이터 편집 Mode 관리
+	const handleEditForm = (key: string) => {
+		Alert.prompt('내용 수정', '수정할 내용을 입력하세요.', [
+			{
+				text: 'Cancel',
+				style: 'cancel',
+			},
+			{
+				text: 'Save',
+				onPress: (prevText: string | undefined) => {
+					if (prevText) {
+						const latestItems = Object.assign({}, items, {
+							[key]: { ...items[key], text: prevText },
+						});
+						setItems(latestItems);
+
+						// localStorage 에 저장
+						saveToLocalStorage(latestItems);
+					}
+				},
+				style: 'default',
+				isPreferred: true,
+			},
+		]);
+	};
+
+	const initTabData = useInitTab();
+	useEffect(() => {
+		loadToDos();
+
+		if (typeof initTabData === 'string')
+			setSelectedCategory(initTabData as Category);
+	}, [initTabData]);
 
 	return (
 		<View style={styles.container}>
@@ -119,7 +144,7 @@ export default function App() {
 				selectedCategory={selectedCategory}
 				checkItem={checkItem}
 				deleteItem={deleteItem}
-				onEditPress={() => setEditMode(true)}
+				onEditPress={handleEditForm}
 			/>
 		</View>
 	);

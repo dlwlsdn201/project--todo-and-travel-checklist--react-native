@@ -10,7 +10,7 @@ interface ToDoScrollListProps {
 	selectedCategory: Category;
 	checkItem: (key: string) => void;
 	deleteItem: (key: string) => void;
-	onEditPress: () => void;
+	onEditPress: (key: string) => void;
 }
 
 /**
@@ -50,7 +50,7 @@ export const ToDoScrollList = ({
 							{item.text}
 						</Text>
 						<View style={styles.actionButtonContainer}>
-							<EditButton onPress={onEditPress} />
+							<EditButton onPress={() => onEditPress(key)} />
 							<Pressable hitSlop={4} onPress={() => deleteItem(key)}>
 								<FontAwesome
 									name='trash-o'
