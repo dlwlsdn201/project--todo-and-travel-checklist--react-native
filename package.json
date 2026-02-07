@@ -11,7 +11,7 @@
     "lint": "expo lint",
     "build": "expo export --platform web",
     "deploy": "eas deploy",
-    "deploy:prod": "eas workflow:run deploy-web.yml",
+    "deploy:prod": "eas deploy --prod",
     "doctor": "expo-doctor"
   },
   "dependencies": {
