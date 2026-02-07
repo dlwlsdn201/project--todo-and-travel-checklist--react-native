@@ -1,4 +1,4 @@
-import { Category } from '@/app';
+import { Category } from '@/model/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 
