@@ -1,47 +1,23 @@
-import { EditButton } from '@/component/EditButton';
-import { useInitTab } from '@/hooks';
-import { THEME_COLORS } from '@/theme/colors';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Header } from '@component/Header';
+import { TextInput } from '@component/TextInput';
+import { ToDoScrollList } from '@component/ToDoScrollList';
+import { STORAGE_KEY } from '@config/localStorage';
+import { useInitTab } from '@hooks/useInitTab';
+import { TodoPoint } from '@model/data';
+import { Category } from '@model/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { THEME_COLORS } from '@theme/colors';
+import { saveToLocalStorage } from '@utils/localStorage';
 import { useEffect, useState } from 'react';
-import {
-	Alert,
-	Pressable,
-	ScrollView,
-	StatusBar,
-	StyleSheet,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	// TouchableWithoutFeedback,
-	View,
-} from 'react-native';
-
-const STORAGE_KEY = 'toDos';
-
-export type Category = 'work' | 'travel';
-
-interface Item {
-	type: Category;
-	text: string;
-	checked: boolean;
-}
+import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 
 export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
 	const [input, setInput] = useState<string>('');
-	const [items, setItems] = useState<{ [key: string]: Item }>({});
+	const [items, setItems] = useState<{ [key: string]: TodoPoint }>({});
+	const [editMode, setEditMode] = useState<boolean>(false);
 
-	const saveToDos = async (newItems: { [key: string]: Item }) => {
-		try {
-			const dataString = JSON.stringify(newItems); // object -> string
-
-			await AsyncStorage.setItem(STORAGE_KEY, dataString);
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
+	// 할 일 목록 로드
 	const loadToDos = async () => {
 		try {
 			const storedDataString = await AsyncStorage.getItem(STORAGE_KEY);
@@ -53,6 +29,7 @@ export default function App() {
 		}
 	};
 
+	// 할 일 추가
 	const addItem = async () => {
 		if (input.trim() !== '') {
 			const latestItems = Object.assign({}, items, {
@@ -60,11 +37,12 @@ export default function App() {
 			});
 			setItems(latestItems);
 
-			await saveToDos(latestItems);
+			await saveToLocalStorage(latestItems);
 			setInput('');
 		}
 	};
 
+	// 할 일 삭제
 	const deleteItem = async (key: string) => {
 		Alert.alert('Delete', 'Are you sure you want to delete this item?', [
 			{
@@ -78,7 +56,7 @@ export default function App() {
 					delete newToDos[key]; // key 와 매칭되는 object key 삭제
 
 					setItems(newToDos); // 삭제할 item 이 제거된 최종 items 을 업데이트
-					await saveToDos(newToDos); // 최종 items 을 localStorage 에 저장
+					await saveToLocalStorage(newToDos); // 최종 items 을 localStorage 에 저장
 				},
 				style: 'destructive',
 			},
@@ -92,7 +70,7 @@ export default function App() {
 		});
 		setItems(latestItems);
 
-		await saveToDos(latestItems);
+		await saveToLocalStorage(latestItems);
 	};
 
 	const initTabData = useInitTab();
@@ -120,93 +98,29 @@ export default function App() {
 
 	return (
 		<View style={styles.container}>
+			{/* 스마트폰 최상단 상태 표시줄 (시간, 네트웤, 배터링 등) */}
 			<StatusBar barStyle='default' />
-			<View style={styles.header}>
-				{/* onPress 가 준비되어 있는 컴포넌트 */}
-				<TouchableOpacity activeOpacity={0.5} onPress={() => changeTab('work')}>
-					<Text
-						style={{
-							...styles.btnText,
-							color:
-								selectedCategory === 'work'
-									? THEME_COLORS.white
-									: THEME_COLORS.gray,
-						}}
-					>
-						Work
-					</Text>
-				</TouchableOpacity>
-				<TouchableOpacity onPress={() => changeTab('travel')}>
-					<Text
-						style={{
-							...styles.btnText,
-							color:
-								selectedCategory === 'travel'
-									? THEME_COLORS.white
-									: THEME_COLORS.gray,
-						}}
-					>
-						Travel
-					</Text>
-				</TouchableOpacity>
-			</View>
-			<View style={styles.inputContainer}>
-				<TextInput
-					style={styles.input}
-					placeholderTextColor={THEME_COLORS.lightGray}
-					returnKeyType='go'
-					placeholder={
-						selectedCategory === 'work'
-							? 'Add a To Do'
-							: 'Where do you want to go?'
-					}
-					value={input}
-					onChangeText={setInput}
-					onSubmitEditing={addItem}
-				/>
-			</View>
-			<ScrollView style={styles.itemContainer}>
-				{Object.entries(items).map(([key, item]) =>
-					item.type === selectedCategory ? (
-						<Pressable
-							key={key}
-							style={{
-								...styles.item,
-								backgroundColor: item.checked
-									? THEME_COLORS.gray
-									: THEME_COLORS.primary,
-							}}
-							onPress={() => checkItem(key)}
-						>
-							<Text
-								style={{
-									...styles.itemText,
-									textDecorationLine: item.checked ? 'line-through' : 'none',
-									color: item.checked
-										? THEME_COLORS.secondaryText
-										: THEME_COLORS.white,
-								}}
-							>
-								{item.text}
-							</Text>
-							<View style={styles.actionButtonContainer}>
-								<EditButton
-									onPress={() => {
-										console.log('편집모드로 진입');
-									}}
-								/>
-								<Pressable hitSlop={30} onPress={() => deleteItem(key)}>
-									<FontAwesome
-										name='trash-o'
-										size={24}
-										color={THEME_COLORS.deleteIconColor}
-									/>
-								</Pressable>
-							</View>
-						</Pressable>
-					) : null,
-				)}
-			</ScrollView>
+			{/* 앱 헤더 (현재 선택된 탭 상태를 표시) */}
+			<Header selectedCategory={selectedCategory} changeTab={changeTab} />
+			{/* 텍스트 입력 UI (할 일 추가 기능) */}
+			<TextInput
+				value={input}
+				onChangeText={setInput}
+				onSubmitEditing={addItem}
+				placeholder={
+					selectedCategory === 'work'
+						? 'Add a To Do'
+						: 'Where do you want to go?'
+				}
+			/>
+			{/* 할 일 목록 스크롤 컴포넌트 (할 일 목록 표시) */}
+			<ToDoScrollList
+				items={items}
+				selectedCategory={selectedCategory}
+				checkItem={checkItem}
+				deleteItem={deleteItem}
+				onEditPress={() => setEditMode(true)}
+			/>
 		</View>
 	);
 }
@@ -217,56 +131,5 @@ const styles = StyleSheet.create({
 		backgroundColor: THEME_COLORS.bg,
 		paddingHorizontal: 20,
 		paddingBottom: 40,
-	},
-	header: {
-		backgroundColor: THEME_COLORS.bg,
-		marginTop: 100,
-		justifyContent: 'space-between',
-		flexDirection: 'row',
-	},
-	inputContainer: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginTop: 20,
-		gap: 20,
-	},
-
-	input: {
-		flex: 1,
-		backgroundColor: 'white',
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 20,
-		fontSize: 18,
-	},
-
-	actionButtonContainer: {
-		flexDirection: 'row',
-		gap: 14,
-	},
-	btnText: {
-		color: THEME_COLORS.gray,
-		fontSize: 38,
-		fontWeight: 'bold',
-	},
-	itemContainer: {
-		marginTop: 20,
-	},
-	item: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 10,
-		marginTop: 10,
-	},
-	itemText: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		textDecorationStyle: 'solid',
-		textDecorationLine: 'line-through',
-		textDecorationColor: THEME_COLORS.white,
 	},
 });
