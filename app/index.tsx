@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEME_COLORS } from '@theme/colors';
 import { saveToLocalStorage } from '@utils/localStorage';
 import { useEffect, useState } from 'react';
-import { Alert, StatusBar, StyleSheet, View } from 'react-native';
+import { Alert, Platform, StatusBar, StyleSheet, View } from 'react-native';
 
 export default function App() {
 	const [selectedCategory, setSelectedCategory] = useState<Category>('work');
@@ -43,7 +43,22 @@ export default function App() {
 
 	// 할 일 삭제
 	const deleteItem = async (key: string) => {
-		Alert.alert('Delete', 'Are you sure you want to delete this item?', [
+		const performDelete = async () => {
+			const newToDos = { ...items };
+			delete newToDos[key]; // key 와 매칭되는 object key 삭제
+
+			setItems(newToDos); // 삭제할 item 이 제거된 최종 items 을 업데이트
+			await saveToLocalStorage(newToDos); // 최종 items 을 localStorage 에 저장
+		};
+
+		if (Platform.OS === 'web') {
+			if (window.confirm('데이터를 지우겠습니까?')) {
+				await performDelete();
+			}
+			return;
+		}
+
+		Alert.alert('데이터 삭제', '데이터를 지우겠습니까?', [
 			{
 				text: 'Cancel',
 				style: 'cancel',
@@ -51,16 +66,11 @@ export default function App() {
 			{
 				text: 'Delete',
 				onPress: async () => {
-					const newToDos = { ...items };
-					delete newToDos[key]; // key 와 매칭되는 object key 삭제
-
-					setItems(newToDos); // 삭제할 item 이 제거된 최종 items 을 업데이트
-					await saveToLocalStorage(newToDos); // 최종 items 을 localStorage 에 저장
+					await performDelete();
 				},
 				style: 'destructive',
 			},
 		]);
-		return;
 	};
 
 	const checkItem = async (key: string) => {
@@ -89,6 +99,23 @@ export default function App() {
 
 	// 입력 데이터 편집 Mode 관리
 	const handleEditForm = (key: string) => {
+		if (Platform.OS === 'web') {
+			const prevText = window.prompt(
+				'수정할 내용을 입력하세요.',
+				items[key]?.text ?? '',
+			);
+			if (prevText != null && prevText.trim() !== '') {
+				const latestItems = Object.assign({}, items, {
+					[key]: { ...items[key], text: prevText.trim() },
+				});
+				setItems(latestItems);
+
+				// localStorage 에 저장
+				saveToLocalStorage(latestItems);
+			}
+			return;
+		}
+
 		Alert.prompt('내용 수정', '수정할 내용을 입력하세요.', [
 			{
 				text: 'Cancel',
